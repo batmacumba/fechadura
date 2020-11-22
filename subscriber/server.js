@@ -108,9 +108,10 @@ app.get('/diaria', (req, res) => {
 	    ocupacao_media = new Array(24).fill(0);
 	    for (let i = 0; i <= 24; i++) {
 	    	if (quantidade_de_valores[i] > 0)
-	    		ocupacao_media[i] = ocupacao_total[i] / quantidade_de_valores[i];
+	    		ocupacao_media[i] = Math.floor(ocupacao_total[i] / quantidade_de_valores[i]);
 	    }
-	    res.send(ocupacao_media.toString())
+	    // res.send(JSON.stringify({ diaria: ocupacao_media}));
+	    res.send(ocupacao_media);
 	});
 });
 
@@ -134,9 +135,10 @@ app.get('/semanal', (req, res) => {
 	    ocupacao_media = new Array(7).fill(0);
 	    for (let i = 0; i <= 7; i++) {
 	    	if (quantidade_de_valores[i] > 0)
-	    		ocupacao_media[i] = ocupacao_total[i] / quantidade_de_valores[i];
+	    		ocupacao_media[i] = Math.floor(ocupacao_total[i] / quantidade_de_valores[i]);
 	    }
-	    res.send(ocupacao_media.toString())
+	    // res.send(JSON.stringify({ semanal: ocupacao_media}));
+	    res.send(ocupacao_media);
 	});
 });
 

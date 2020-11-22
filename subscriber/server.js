@@ -86,15 +86,54 @@ app.get('/instantanea', (req, res) => {
 });
 
 app.get('/diaria', (req, res) => {
-	console.log(Episode.
-      find({ airedAt: { $gte: '1987-10-19', $lte: '1987-10-26' } }).
-      sort({ airedAt: 1 });
-      );
-	res.send('Diaria!');
+	var weekAgo = new Date();
+	weekAgo.setDate(weekAgo.getDate() - 7);
+	var pipeline = [ 
+		{$match: {timestamp: {$gte: weekAgo}}},
+	    {$project: {hour: {$hour: '$timestamp'}, 
+	    			ocupacao: {$size: '$ocupantes'}}}
+	];
+	db.collection('ocupacaos').aggregate(pipeline, async function(err, query) {
+	    if (err) throw err;
+	    ocupacao_total = new Array(24).fill(0);
+	    quantidade_de_valores = new Array(24).fill(0);
+	    await query.forEach(function(doc) { 
+	    	ocupacao_total[doc.hour] += doc.ocupacao;
+	    	quantidade_de_valores[doc.hour] += 1;
+	    });
+	    ocupacao_media = new Array(24).fill(0);
+	    for (let i = 0; i <= 24; i++) {
+	    	if (quantidade_de_valores[i] > 0)
+	    		ocupacao_media[i] = ocupacao_total[i] / quantidade_de_valores[i];
+	    }
+	    res.send(ocupacao_media.toString())
+	});
 });
 
+/* Devolve a ocupação média por dia de semana nos últimos sete dias */
 app.get('/semanal', (req, res) => {
-	// res.send('Semanal!');
+	var weekAgo = new Date();
+	weekAgo.setDate(weekAgo.getDate() - 7);
+	var pipeline = [ 
+		{$match: {timestamp: {$gte: weekAgo}}},
+	    {$project: {dayOfWeek: {$dayOfWeek: '$timestamp'}, 
+	    			ocupacao: {$size: '$ocupantes'}}}
+	];
+	db.collection('ocupacaos').aggregate(pipeline, async function(err, query) {
+	    if (err) throw err;
+	    ocupacao_total = new Array(7).fill(0);
+	    quantidade_de_valores = new Array(7).fill(0);
+	    await query.forEach(function(doc) { 
+	    	ocupacao_total[doc.dayOfWeek] += doc.ocupacao;
+	    	quantidade_de_valores[doc.dayOfWeek] += 1;
+	    });
+	    ocupacao_media = new Array(7).fill(0);
+	    for (let i = 0; i <= 7; i++) {
+	    	if (quantidade_de_valores[i] > 0)
+	    		ocupacao_media[i] = ocupacao_total[i] / quantidade_de_valores[i];
+	    }
+	    res.send(ocupacao_media.toString())
+	});
 });
 
 app.listen(port, () => {

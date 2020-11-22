@@ -33,4 +33,4 @@ function coinToss() {
 	client.publish('ocupacao', message);
 }
 
-setInterval(coinToss, 1000);
+setInterval(coinToss, 10000);

@@ -77,14 +77,18 @@ client.on('message', function (topic, message) {
 
 // Criação das rotas e parse das informações no DB
 
-const express = require('express')
-const app = express()
+var express = require('express');
+var cors = require('cors');
+var app = express();
+app.use(cors());
 const port = 3001
 
+/* Devolve o número de ocupantes no momento */
 app.get('/instantanea', (req, res) => {
 	res.send(instantanea.length.toString());
 });
 
+/* Devolve a ocupação média por hora nos últimos sete dias */
 app.get('/diaria', (req, res) => {
 	var weekAgo = new Date();
 	weekAgo.setDate(weekAgo.getDate() - 7);

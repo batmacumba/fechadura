@@ -8,7 +8,7 @@
 #define RST_PIN  D2 
 #define SS_PIN  D4
 #define STASSID "Obi Wan Kenobi_IoT"
-#define STAPSK  "oladobomdaforca"
+#define STAPSK  "oladobomdaforca" // minha senha do wifi, uhuu
 #define MSG_BUFFER_SIZE  (50)
 #define MAX_OCUPANTES 64
 #define NTP_OFFSET   -3 * 60 * 60      // In seconds
@@ -23,6 +23,7 @@ const char* password = STAPSK;
 const char* mqtt_server = "192.168.15.49";
 unsigned long lastMsg = 0;
 char msg[MSG_BUFFER_SIZE];
+String authorizedIDs = "";
 int value = 0;
 char *current[MAX_OCUPANTES];
 WiFiUDP ntpUDP;
@@ -82,23 +83,11 @@ setup_wifi()
 void 
 callback(char* topic, byte* payload, unsigned int length) 
 {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-
-  // Switch on the LED if an 1 was received as first character
-  if ((char)payload[0] == '1') {
-    digitalWrite(BUILTIN_LED, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is active low on the ESP-01)
-  } else {
-    digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
-  }
-
+    String message = "";
+    for (int i = 0; i < length; i++) {
+        message += (char) payload[i];
+    }
+    if (strncmp(topic, "autorizados", 11) == 0) authorizedIDs = message;
 }
 
 void 
@@ -113,10 +102,8 @@ reconnect()
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
-      // ... and resubscribe
-      client.subscribe("inTopic");
+      client.subscribe("autorizados");
+      // TODO: pegar a ocupacao atual em caso de power off
     } 
     else {
       Serial.print("failed, rc=");
@@ -128,11 +115,18 @@ reconnect()
   }
 }
 
+bool 
+isAuthorizedID(String rfid_uid)
+{
+    if (authorizedIDs.indexOf(rfid_uid) > 0) return true;
+    return false;
+}
+
 bool
 notInCurrent(String rfid_uid)
 {
     for (int i = 0; i < MAX_OCUPANTES; i++) 
-        if (strcmp(current[i], rfid_uid.c_str()) == 0)  return false;
+        if (strncmp(current[i], rfid_uid.c_str(), 8) == 0)  return false;
     return true;
 }
 
@@ -147,12 +141,29 @@ addToCurrent(String rfid_uid)
     }
 }
 
+void
+shiftCurrent()
+{
+    for (int i = 0; i < MAX_OCUPANTES; i++) {
+        // Troca o zero no i pelo ID no i+1 e zera o i+1
+        if (strlen(current[i]) == 0 && strlen(current[i + 1]) > 0) {
+            strncpy(current[i], current[i + 1], 9);
+            *current[i + 1] = '\0';
+        }
+        // Dois zeros seguidos significa que não é mais necessário continuar o shift
+        if (strlen(current[i]) == 0 && strlen(current[i + 1]) == 0) 
+            return;
+    }
+}
+
 int
 removeFromCurrent(String rfid_uid)
 {
     for (int i = 0; i < MAX_OCUPANTES; i++) {
-        if (strcmp(current[i], rfid_uid.c_str()) == 0) {
+        if (strncmp(current[i], rfid_uid.c_str(), 8) == 0) {
             *current[i] = '\0';
+            // Vamos evitar "buracos" no array
+            shiftCurrent();
             return 0;
         }
     }
@@ -172,8 +183,12 @@ String
 formatCurrent()
 {
     String formatted = "";
-    for (int i = 0; i < MAX_OCUPANTES; i++)
-        if (strlen(current[i]) > 0) formatted += ", " + String(current[i]);
+    for (int i = 0; i < MAX_OCUPANTES; i++) {
+        if (strlen(current[i]) > 0) {
+          if (strlen(current[i + 1]) == 0 || i == MAX_OCUPANTES - 1) formatted += String(current[i]);
+          else formatted += String(current[i]) + ", "; 
+        }
+    }
     return formatted;
 }
 
@@ -187,8 +202,7 @@ setup()
     SPI.begin();           
     mfrc522.PCD_Init();   
     initializeCurrent();
-    timeClient.begin();
-    // TODO: restore current from MQTT topic
+    timeClient.begin();TO
 }
 
 void 
@@ -198,32 +212,35 @@ loop()
     client.loop();
     timeClient.update();
 
+    // TODO: só vai ler o RFID quando a porta estiver fechada
     String rfid_uid = readRFID();
     if (rfid_uid.length() > 0) {
-        if (notInCurrent(rfid_uid)) {
-            // Entrada
-            addToCurrent(rfid_uid);
-            String message = "{ \"id\": \"" + rfid_uid + "\", \"timestamp\": \"" + 
-                            timeClient.getFormattedDate() + "\" }";
-            client.publish("entrada", message.c_str());
-        }
-        else {
-            // Saída
-            removeFromCurrent(rfid_uid);
-            String message = "{ \"id\": \"" + rfid_uid + "\", \"timestamp\": \"" + 
-                            timeClient.getFormattedDate() + "\" }";
-            client.publish("entrada", message.c_str());
+        if (isAuthorizedID(rfid_uid)) {
+            if (notInCurrent(rfid_uid)) {
+                // Entrada
+                addToCurrent(rfid_uid);
+                String message = "{ \"id\": \"" + rfid_uid + "\", \"timestamp\": \"" + 
+                                timeClient.getFormattedDate() + "\" }";
+                client.publish("entrada", message.c_str());
+                delay(1000);
+            }
+            else {
+                // Saída
+                removeFromCurrent(rfid_uid);
+                String message = "{ \"id\": \"" + rfid_uid + "\", \"timestamp\": \"" + 
+                                timeClient.getFormattedDate() + "\" }";
+                client.publish("saida", message.c_str());
+                delay(1000);
+            }
         }
     }
   
     unsigned long now = millis();
     if (now - lastMsg > 10000) {
-      lastMsg = now;
-      ++value;
-      Serial.println(formatCurrent());
-//      snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
-//      Serial.print("Publish message: ");
-//      Serial.println(msg);
-//      client.publish("outTopic", msg);
+        lastMsg = now;
+        ++value;
+        String message = "{ \"ocupantes\": \"" + formatCurrent() + "\", \"timestamp\": \"" + 
+                              timeClient.getFormattedDate() + "\" }";
+        client.publish("ocupacao", message.c_str());
     }
 }

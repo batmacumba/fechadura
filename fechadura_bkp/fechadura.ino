@@ -1,13 +1,18 @@
 #include <MFRC522.h>
 #include <SPI.h>
-#include <ESP8266WiFi.h>
+//#include <ESP8266WiFi.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
 #include <PubSubClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 
-//#define RST_PIN           D3 
-//#define SS_PIN            D4
+#define RFID_SDA          5
+#define RFID_SCK          18
+#define RFID_MOSI         23
+#define RFID_MISO         19
+#define RFID_RST          22
 #define STASSID           "Obi Wan Kenobi_IoT"
 #define STAPSK            "oladobomdaforca" // minha senha do wifi, uhuu
 #define MSG_BUFFER_SIZE   (50)
@@ -16,12 +21,9 @@
 #define NTP_INTERVAL      60 * 1000    // In miliseconds
 #define NTP_ADDRESS       "europe.pool.ntp.org"
 
-constexpr uint8_t RST_PIN =  0;          // Configurable, see typical pin layout above 18
-constexpr uint8_t SS_PIN =  15; 
-
 WiFiClient espClient;
 PubSubClient client(espClient);
-MFRC522 mfrc522(SS_PIN, RST_PIN);
+MFRC522 mfrc522(RFID_SDA, RFID_RST);
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 const char* ssid     = STASSID;

@@ -9,7 +9,6 @@
 
   import AreaChart from "../components/Charts/AreaChart.svelte";
   import BarChart from "../components/Charts/BarChart.svelte";
-  import PieChart from "../components/Charts/PieChart.svelte";
 
   let cardFooterText = "Updated yesterday at 11:59 PM";
   let areaCardTitle = "Area Chart Example";
@@ -57,18 +56,6 @@
       </CardHeader>
       <CardBody>
         <BarChart />
-      </CardBody>
-      <CardFooter class="small text-muted">{cardFooterText}</CardFooter>
-    </Card>
-  </div>
-  <div class="col-lg-6">
-    <Card class="mb-4">
-      <CardHeader>
-        <i class="fas fa-chart-pie" />
-        {pieCardTitle}
-      </CardHeader>
-      <CardBody>
-        <PieChart />
       </CardBody>
       <CardFooter class="small text-muted">{cardFooterText}</CardFooter>
     </Card>

@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import Chart from "chart.js";
+  import fetch from "node-fetch"
 
   const chartData = {
     labels: [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
@@ -39,13 +40,23 @@
   }
 
   onMount(async () => {
-    await fetch('http://localhost:3001/diaria')
+    await fetch('http://192.168.15.49:3001/diaria')
       .then(r => r.json())
       .then(data => {
         chartData.datasets[0].data = data;
         createChart();
       });
   });
+
+  async function refreshChart() {
+    await fetch('http://192.168.15.49:3001/diaria')
+      .then(r => r.json())
+      .then(data => chartData.datasets[0].data = data)
+  }
+
+  const interval = setInterval(() => {
+      refreshChart();
+    }, 10000);
 
 </script>
 

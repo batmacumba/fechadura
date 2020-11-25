@@ -6,8 +6,12 @@
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
 
-//#define RST_PIN           D3 
-//#define SS_PIN            D4
+#define RST_PIN           D0  
+#define SS_PIN            D8  
+#define MISO_PIN          D6 
+#define MOSI_PIN          D7 
+#define SCK_PIN           D5  
+
 #define STASSID           "Obi Wan Kenobi_IoT"
 #define STAPSK            "oladobomdaforca" // minha senha do wifi, uhuu
 #define MSG_BUFFER_SIZE   (50)
@@ -15,9 +19,6 @@
 #define NTP_OFFSET        -3 * 60 * 60      // In seconds
 #define NTP_INTERVAL      60 * 1000    // In miliseconds
 #define NTP_ADDRESS       "europe.pool.ntp.org"
-
-constexpr uint8_t RST_PIN =  0;          // Configurable, see typical pin layout above 18
-constexpr uint8_t SS_PIN =  15; 
 
 WiFiClient espClient;
 PubSubClient client(espClient);

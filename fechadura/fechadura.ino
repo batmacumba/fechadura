@@ -5,13 +5,13 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
+#include "bag.h"
 
 #define RST_PIN           D0  
 #define SS_PIN            D8  
 #define MISO_PIN          D6 
 #define MOSI_PIN          D7 
 #define SCK_PIN           D5  
-
 #define STASSID           "Obi Wan Kenobi_IoT"
 #define STAPSK            "oladobomdaforca" // minha senha do wifi, uhuu
 #define MSG_BUFFER_SIZE   (50)

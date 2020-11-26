@@ -11,7 +11,8 @@
 #define SS_PIN            D8  
 #define MISO_PIN          D6 
 #define MOSI_PIN          D7 
-#define SCK_PIN           D5  
+#define SCK_PIN           D5
+#define RELAY_PIN         D3  
 #define SSID              "Obi Wan Kenobi_IoT"
 #define PASS              "oladobomdaforca"       // minha senha do wifi, uhuu
 #define MQTT_SERVER       "192.168.15.49"
@@ -188,6 +189,14 @@ format_current(char *buffer)
     strcpy(buffer, formatted.c_str());
 }
 
+void
+abre_trava_eletrica()
+{
+    digitalWrite(RELAY_PIN, LOW); 
+    delay(1000);          
+    digitalWrite(RELAY_PIN, HIGH);  
+}
+
 void 
 setup() 
 {
@@ -202,6 +211,9 @@ setup()
     delay(4);       
     mfrc522.PCD_DumpVersionToSerial(); 
     time_client.begin();
+    pinMode(RELAY_PIN, OUTPUT);
+    digitalWrite(RELAY_PIN, HIGH);
+
 }
 
 void 
@@ -210,6 +222,7 @@ loop()
     if (!client.connected()) reconnect();
     client.loop();
     time_client.update();
+    bool abre = false;
     
     // TODO: só vai ler o RFID quando a porta estiver fechada
     /* Handler da leitura do cartão */
@@ -233,6 +246,8 @@ loop()
                 list_remove(current, uid, &str_cmp);
                 topic = "saida";
             }
+            abre = true;
+            
         }
         else {
             strncpy(message, uid, MAX_BUFFER_SIZE);
@@ -255,4 +270,6 @@ loop()
        // Retain
        client.publish("ocupacao", message, 1);
     }
+
+    if (abre) abre_trava_eletrica();
 }

@@ -8660,6 +8660,9 @@ button.bg-dark:focus {
 .pb-4,
 .py-4 {
     padding-bottom: 1.5rem !important;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .pl-4,

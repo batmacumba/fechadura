@@ -14,8 +14,6 @@
   let isAuthenticationOpen = false;
   let isErrorOpen = false;
   let activeLink = "Dashboard";
-  let footerName = "SB Admin Svelte";
-  let footerText = "Logged in as:";
 
   const updateActiveLink = linkName => (activeLink = linkName);
 
@@ -50,16 +48,26 @@
     id="sidenavAccordion">
     <div class="sb-sidenav-menu">
       <Nav>
-        <div class="sb-sidenav-menu-heading">Core</div>
+        <div class="sb-sidenav-menu-heading"></div>
         <SidebarItem
           on:press={() => {
             theme = 'dark';
           }}
-          text="Dashboard"
+          text="Estatísticas"
           class={segment === '.' || segment === undefined ? 'active' : ''}
           leftIcon
           href=".">
           <i class="fas fa-tachometer-alt" slot="leftIcon" />
+        </SidebarItem>
+        <SidebarItem
+          class={segment === 'tables' ? 'active' : ''}
+          on:press={() => {
+            theme = 'dark';
+          }}
+          href="tables"
+          text="Controle de acesso"
+          leftIcon>
+          <i class="fas fa-table" slot="leftIcon" />
         </SidebarItem>
       </Nav>
     </div>

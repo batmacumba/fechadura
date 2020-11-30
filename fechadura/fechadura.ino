@@ -9,13 +9,10 @@
 
 #define RST_PIN           D0  
 #define SS_PIN            D8  
-#define MISO_PIN          D6 
-#define MOSI_PIN          D7 
-#define SCK_PIN           D5
 #define RELAY_PIN         D3  
-#define SSID              "Obi Wan Kenobi_IoT"
-#define PASS              "oladobomdaforca"       // minha senha do wifi, uhuu
-#define MQTT_SERVER       "192.168.15.49"
+#define SSID              "your-ssid"
+#define PASS              "your-pass"       
+#define MQTT_SERVER       "MQTT-SERVER-IP"
 #define MAX_BUFFER_SIZE   256
 #define NTP_OFFSET        -3 * 60 * 60            // In seconds
 #define NTP_INTERVAL      60 * 1000               // In miliseconds
@@ -37,6 +34,7 @@ str_cmp(void *a, void *b)
 {
     char *str_a = (char *) a;
     char *str_b = (char *) b;
+//    Serial.printf("compare %s %s\n", str_a, str_b);
     return strcmp(str_a, str_b);
 }
 
@@ -146,14 +144,14 @@ reconnect()
 void
 update_authorized(String message)
 {
+    if (authorized) list_destroy(authorized);
+    authorized = list_new();
     char buffer[MAX_BUFFER_SIZE];
     strncpy(buffer, message.c_str(), MAX_BUFFER_SIZE);
-    // Limpa aspas antes e depois
-    buffer[strlen(buffer) - 1] = '\0';
-    char *token = strtok(buffer + 1, ", ");
+    char *token = strtok(buffer, ",");
     while (token != NULL) {
         list_append(authorized, token, strlen(token) + 1);
-        token = strtok(NULL, ", ");
+        token = strtok(NULL, ",");
     }
 }
 
@@ -229,9 +227,8 @@ loop()
     char message[MAX_BUFFER_SIZE];
     readRFID();
     if (strlen(uid) > 0) {
-        // Serial.printf("Leitura: %s\n", uid);
         const char *topic;
-        if (list_contains(authorized, uid, &str_cmp)) {
+        if (list_length(authorized) > 0 && list_contains(authorized, uid, &str_cmp)) {
             snprintf(message, MAX_BUFFER_SIZE, 
                     "{ \"id\": \"%s\", \"timestamp\": \"%s\" }",
                     uid, time_client.getFormattedDate().c_str());

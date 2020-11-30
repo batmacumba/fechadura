@@ -96,10 +96,7 @@ list_mem_handler(List *l, int flag)
         handler = list_resize(l, 2 * l -> allocated, flag);
     }
     /* no resize needed, move along */
-    else {
-        // puts("no resize");
-        handler = 0;
-    }
+    else handler = 0;
     /* error? */
     if (handler < 0)
         fprintf(stderr, "list_mem_handler: error resizing list\n");
@@ -238,6 +235,7 @@ list_remove(List *l, void *data, int (compare)(void *, void *))
 int
 list_contains(List *l, void *data, int (compare)(void *, void *)) 
 {
+    // BUG: contains numa lista vazia da segfault
     for (int i = l -> zero; i < l -> zero + l -> n; i++)
         if (compare(data, l -> items[i]) == 0) return 1;
     return 0;
@@ -255,17 +253,28 @@ list_length(List *l)
     return (l -> n);
 }
 
+void
+list_destroy(List *l)
+{
+    for (int i = 0; i < l -> allocated; i++) 
+        if (l -> items[i]) free(l -> items[i]);
+    free(l -> items);
+}
+
 // #define list_append(l, data) list_append(l, data, sizeof(data))
 // #define list_prepend(l, data) list_prepend(l, data, sizeof(data))
 // #define list_set(l, i, data) list_set(l, i, data, sizeof(data))
 
-int
-str_compare(void *a, void *b)
-{
-    char *str_a = (char *) a;
-    char *str_b = (char *) b;
-    return strcmp(str_a, str_b);
-}
+// int
+// str_compare(void *a, void *b)
+// {
+//     char *str_a = (char *) a;
+//     char *str_b = (char *) b;
+//     return strcmp(str_a, str_b);
+// }
+
+
+
 
 /* Testes */
 // int

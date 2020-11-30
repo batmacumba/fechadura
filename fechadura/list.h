@@ -24,6 +24,7 @@ int     list_remove(List *l, void *data, int (compare)(void *, void *));
 int 	list_contains(List *l, void *data, int (compare)(void *, void *));
 int 	list_is_empty(List *l);
 int 	list_length(List *l);
+void 	list_destroy(List *l);
 
 // TODO: pop, sort, reverse? List[]?
 

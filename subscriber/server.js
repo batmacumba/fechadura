@@ -67,7 +67,7 @@ function registrar_desconhecido(message) {
 }
 
 function registrar_autorizados(message) {
-	autorizados.push(message);
+	autorizados = message.split(',');
 }
 
 client.on('connect', function () {
@@ -98,15 +98,10 @@ app.use(cors());
 const port = 3001;
 
 /* Autoriza o último UID desconhecido */
-app.get('/autorizados', (req, res) => {
-	res.send('\"' + autorizados.toString() + '\"');
-});
-
-/* Autoriza o último UID desconhecido */
 app.get('/autoriza', (req, res) => {
 	res.sendStatus(200);
 	// TODO: possível bug: possibilidade de uid_desconhecido != autorizado
-	autorizados.push(' ' + uid_desconhecido);
+	autorizados.push(uid_desconhecido);
 	client.publish('autorizados', autorizados.toString(), { retain: true });
 });
 
@@ -114,6 +109,7 @@ app.get('/autoriza', (req, res) => {
 app.get('/nao_autoriza', (req, res) => {
 	res.sendStatus(200);
 	uid_desconhecido = "";
+	client.publish('desconhecidos', "");
 });
 
 /* Devolve o último UID desconhecido escaneado */
